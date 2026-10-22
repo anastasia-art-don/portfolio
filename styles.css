@@ -6,8 +6,10 @@
 
 :root {
   /* Fonts. To change a web font, also change its link in the <head> of index.html. */
-  --font-sans: Arial, Helvetica, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: "Manrope", Arial, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  /* Cormorant's letters are smaller than Manrope's at the same size; this evens them out. */
+  --serif-scale: 1.16;
 
   /* Colours */
   --bg: #f8f6f0;
@@ -61,7 +63,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 a:focus-visible,
 button:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
 
-em { font-family: var(--font-serif); font-weight: 400; color: var(--accent); }
+em { font-family: var(--font-serif); font-size: calc(var(--serif-scale) * 1em); font-weight: 500; color: var(--accent); }
+
+/* Headings break into lines of even length; paragraphs avoid a lone last word. */
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
 
 h2 { font-size: clamp(35px, 3.5vw, 49px); letter-spacing: -1.8px; line-height: 1.15; font-weight: 400; margin: 0; }
 
@@ -139,7 +145,7 @@ nav { display: flex; gap: 36px; font-size: 13px; }
   background: var(--ink); color: var(--bg);
   font-size: 13px; line-height: 1.45; padding: 14px 20px; border-radius: 20px;
 }
-.portrait figcaption em { color: var(--accent-soft); font-size: 15px; }
+.portrait figcaption em { color: var(--accent-soft); }
 
 .hero-line {
   grid-column: 1 / -1;
@@ -163,7 +169,6 @@ nav { display: flex; gap: 36px; font-size: 13px; }
   .portrait { order: 1; width: 82%; justify-self: end; }
   .portrait img { aspect-ratio: 4 / 5; }
   .portrait figcaption { left: -44px; bottom: 20px; font-size: 12px; padding: 11px 15px; border-radius: 16px; }
-  .portrait figcaption em { font-size: 14px; }
   .intro { order: 2; font-size: 15px; margin: 0; }
   .hero .button { order: 3; justify-self: start; font-size: 13px; gap: 28px; padding: 15px 22px; }
   .hero-line { order: 4; font-size: 9px; line-height: 1.6; }

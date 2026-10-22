@@ -82,6 +82,12 @@ h3 { font-size: 25px; letter-spacing: -.6px; line-height: 1.2; font-weight: 400;
 
 .modal-open { overflow: hidden; }
 
+/* Arrows and the cross are SVG icons: as text, iPhones draw them as emoji. One arrow of each kind is turned to point elsewhere. */
+.icon { display: inline-block; width: 1em; height: 1em; vertical-align: -.14em; flex: none; }
+.icon-down-right, .icon-down { rotate: 90deg; }
+.icon-up { rotate: -90deg; }
+.icon-left { rotate: 180deg; }
+
 @media (max-width: 600px) {
   h2 { font-size: 34px; }
 }
@@ -342,7 +348,9 @@ dialog::backdrop { background: var(--backdrop); backdrop-filter: blur(5px); }
 dialog .eyebrow { margin-bottom: 12px; padding-right: 35px; }
 dialog > p:not(.eyebrow) { max-width: 650px; color: var(--muted); font-size: 14px; }
 
-.close { position: absolute; right: 14px; top: 10px; width: 44px; height: 44px; border: 0; background: transparent; font-size: 30px; }
+.close { position: absolute; right: 14px; top: 10px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; background: transparent; font-size: 28px; }
+/* The title takes focus when a project opens, so the close button shows no focus ring after a tap. */
+#case-title:focus { outline: none; }
 
 #case-gallery { display: block; min-width: 0; margin: 28px 0; }
 #case-gallery [hidden] { display: none; }
@@ -356,7 +364,7 @@ dialog > p:not(.eyebrow) { max-width: 650px; color: var(--muted); font-size: 14p
 .gallery-error { padding: 25px; text-align: center; }
 
 .gallery-toolbar { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 16px; align-items: center; margin: 14px 0; }
-.gallery-toolbar button { height: 44px; border: 1px solid var(--line); border-radius: 50%; background: transparent; font-size: 22px; }
+.gallery-toolbar button { display: grid; place-items: center; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: transparent; font-size: 22px; }
 .gallery-toolbar button:hover:not(:disabled) { background: var(--ink); color: var(--bg); }
 .gallery-toolbar button:disabled { opacity: .3; cursor: default; }
 

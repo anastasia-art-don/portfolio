@@ -328,7 +328,7 @@ document.querySelectorAll('.project-image[data-case]').forEach(button=>{const co
 const dialog=document.querySelector('dialog');
 const gallery=document.querySelector('#case-gallery');
 let trigger,activeProject,activeSlide=0,slideDirection=0;
-gallery.innerHTML=`<div class="gallery-stage" role="group" aria-label="Зображення проєкту"><img class="gallery-photo" alt="" draggable="false"><p class="gallery-error" hidden>Не вдалося завантажити зображення. Спробуй інший кадр.</p></div><div class="gallery-toolbar"><button type="button" class="gallery-prev" aria-label="Попереднє фото">←</button><p class="gallery-caption" role="status" aria-live="polite" aria-atomic="true"></p><button type="button" class="gallery-next" aria-label="Наступне фото">→</button></div><div class="gallery-thumbs" role="group" aria-label="Вибрати фото"></div>`;
+gallery.innerHTML=`<div class="gallery-stage" role="group" aria-label="Зображення проєкту"><img class="gallery-photo" alt="" draggable="false"><p class="gallery-error" hidden>Не вдалося завантажити зображення. Спробуй інший кадр.</p></div><div class="gallery-toolbar"><button type="button" class="gallery-prev" aria-label="Попереднє фото"><svg class="icon icon-left" aria-hidden="true"><use href="#arrow"/></svg></button><p class="gallery-caption" role="status" aria-live="polite" aria-atomic="true"></p><button type="button" class="gallery-next" aria-label="Наступне фото"><svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></button></div><div class="gallery-thumbs" role="group" aria-label="Вибрати фото"></div>`;
 const photo=gallery.querySelector('.gallery-photo');
 const previous=gallery.querySelector('.gallery-prev');
 const next=gallery.querySelector('.gallery-next');

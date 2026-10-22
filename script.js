@@ -246,9 +246,14 @@ const projects={
   },
   "three": {
     "title": "Форма, світло, 3D",
-    "category": "3D-графіка · Візуальні експерименти",
-    "description": "Добірка тривимірних композицій: органічні форми, скло, текстиль, об’ємна типографіка й стилізовані середовища. Дослідження кольору, матеріалів і світла.",
+    "category": "3D-графіка й анімація · Візуальні експерименти",
+    "description": "Добірка тривимірних композицій і анімацій: органічні форми, скло, текстиль, об’ємна типографіка й стилізовані середовища. Дослідження кольору, матеріалів, світла й руху.",
     "images": [
+      [
+        "3d-pink-blobs",
+        "Рожеві органічні форми в русі",
+        "video"
+      ],
       [
         "new-78",
         "Рожеві органічні форми"
@@ -286,8 +291,18 @@ const projects={
         "Об’ємна типографіка"
       ],
       [
+        "3d-art-lenses",
+        "Скляна об’ємна типографіка ART в русі",
+        "video"
+      ],
+      [
         "new-87",
         "Скляні форми й кульки"
+      ],
+      [
+        "3d-glass",
+        "Скляна посудина й молекули в русі",
+        "video"
       ],
       [
         "new-88",
@@ -306,6 +321,11 @@ const projects={
         "Літери та об’ємні форми"
       ],
       [
+        "3d-shatter",
+        "Розлом об’ємних форм",
+        "video"
+      ],
+      [
         "new-92",
         "Прозора посудина зі сферами"
       ],
@@ -314,17 +334,37 @@ const projects={
         "Стилізовані острівці з будиночками"
       ],
       [
+        "3d-candy-island",
+        "Солодкий острівець, анімоване середовище",
+        "video"
+      ],
+      [
         "new-94",
         "Іридисцентна сфера"
       ],
       [
+        "3d-morphing",
+        "Морфінг іридисцентної сфери",
+        "video"
+      ],
+      [
         "new-96",
         "Композиція зі сферами на тлі пейзажу"
+      ],
+      [
+        "3d-fluid",
+        "Абстрактна анімація рідких форм",
+        "video"
       ]
     ]
   }
 };
-document.querySelectorAll('.project-image[data-case]').forEach(button=>{const count=document.createElement('span');count.className='photo-count';count.textContent=projects[button.dataset.case].images.length+' фото';button.append(count);});
+// A gallery entry is [file name, description] for a photo and [file name, description, 'video'] for an animation.
+document.querySelectorAll('.project-image[data-case]').forEach(button=>{
+ const images=projects[button.dataset.case].images,videos=images.filter(([,,kind])=>kind==='video').length;
+ const count=document.createElement('span');count.className='photo-count';
+ count.textContent=`${images.length-videos} фото`+(videos?` · ${videos} відео`:'');button.append(count);
+});
 // A cover whose phone copy is missing falls back to the full-size photo.
 document.querySelectorAll('picture img').forEach(image=>{
  const fallBack=()=>image.parentElement.querySelectorAll('source').forEach(source=>source.remove());
@@ -333,13 +373,14 @@ document.querySelectorAll('picture img').forEach(image=>{
 const dialog=document.querySelector('dialog');
 const gallery=document.querySelector('#case-gallery');
 let trigger,activeProject,activeSlide=0,slideDirection=0;
-gallery.innerHTML=`<div class="gallery-stage" role="group" aria-label="Зображення проєкту"><img class="gallery-photo" alt="" draggable="false"><p class="gallery-error" hidden>Не вдалося завантажити зображення. Спробуй інший кадр.</p></div><div class="gallery-toolbar"><button type="button" class="gallery-prev" aria-label="Попереднє фото"><svg class="icon icon-left" aria-hidden="true"><use href="#arrow"/></svg></button><p class="gallery-caption" role="status" aria-live="polite" aria-atomic="true"></p><button type="button" class="gallery-next" aria-label="Наступне фото"><svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></button></div><div class="gallery-thumbs" role="group" aria-label="Вибрати фото"></div>`;
+gallery.innerHTML=`<div class="gallery-stage" role="group" aria-label="Зображення проєкту"><img class="gallery-photo" alt="" draggable="false"><video class="gallery-video" muted loop playsinline hidden></video><p class="gallery-error" hidden>Не вдалося завантажити зображення. Спробуй інший кадр.</p></div><div class="gallery-toolbar"><button type="button" class="gallery-prev" aria-label="Попереднє фото"><svg class="icon icon-left" aria-hidden="true"><use href="#arrow"/></svg></button><p class="gallery-caption" role="status" aria-live="polite" aria-atomic="true"></p><button type="button" class="gallery-next" aria-label="Наступне фото"><svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></button></div><div class="gallery-thumbs" role="group" aria-label="Вибрати фото"></div>`;
 const photo=gallery.querySelector('.gallery-photo');
 const previous=gallery.querySelector('.gallery-prev');
 const next=gallery.querySelector('.gallery-next');
 const caption=gallery.querySelector('.gallery-caption');
 const thumbs=gallery.querySelector('.gallery-thumbs');
 const error=gallery.querySelector('.gallery-error');
+const video=gallery.querySelector('.gallery-video');
 // Phones load the lighter copy of each photo from assets/m/; the full-size file is the fallback.
 const phone=window.matchMedia('(max-width: 600px)');
 const photoUrl=name=>phone.matches?`assets/m/${name}.webp`:`assets/${name}.webp`;
@@ -347,10 +388,14 @@ function showSlide(index){
  if(!activeProject)return;
  const target=Math.max(0,Math.min(index,activeProject.images.length-1));
  slideDirection=Math.sign(target-activeSlide);activeSlide=target;
- const [name,alt]=activeProject.images[activeSlide];
+ const [name,alt,kind]=activeProject.images[activeSlide];
  // Load the next photo in advance, so swiping through a project does not wait for the network.
  const following=activeProject.images[activeSlide+1];if(following)new Image().src=photoUrl(following[0]);
- error.hidden=true;photo.hidden=false;photo.alt=alt;photo.src=photoUrl(name);
+ error.hidden=true;
+ // An animation plays in place of the photo, silent and looping; its first frame shows while it loads.
+ photo.hidden=kind==='video';video.hidden=kind!=='video';
+ if(kind==='video'){video.poster=photoUrl(name);video.src=`assets/video/${name}.mp4`;video.setAttribute('aria-label',alt);video.controls=motionPreference.matches;if(!motionPreference.matches)video.play().catch(()=>{});}
+ else{video.pause();video.removeAttribute('src');video.load();photo.alt=alt;photo.src=photoUrl(name);}
  caption.textContent=`${activeSlide+1} / ${activeProject.images.length} — ${alt}`;
  previous.disabled=activeSlide===0;next.disabled=activeSlide===activeProject.images.length-1;
  [...thumbs.children].forEach((button,i)=>button.setAttribute('aria-pressed',String(i===activeSlide)));
@@ -372,8 +417,8 @@ document.querySelectorAll('[data-case]').forEach(button=>button.addEventListener
  document.querySelector('#case-title').textContent=activeProject.title;
  document.querySelector('#case-category').textContent=activeProject.category;
  document.querySelector('#case-description').textContent=activeProject.description;
- thumbs.replaceChildren(...activeProject.images.map(([name,alt],i)=>{
-  const thumb=document.createElement('button');thumb.type='button';thumb.setAttribute('aria-label',`Фото ${i+1}: ${alt}`);
+ thumbs.replaceChildren(...activeProject.images.map(([name,alt,kind],i)=>{
+  const thumb=document.createElement('button');thumb.type='button';thumb.setAttribute('aria-label',`${kind==='video'?'Відео':'Фото'} ${i+1}: ${alt}`);if(kind)thumb.dataset.kind=kind;
   const image=document.createElement('img');image.src=`assets/thumbs/${name}.webp`;image.alt='';image.loading='lazy';thumb.append(image);
   image.addEventListener('error',()=>{image.src=`assets/${name}.webp`;},{once:true});
   thumb.addEventListener('click',()=>showSlide(i));return thumb;
@@ -395,7 +440,7 @@ stage.addEventListener('touchend',event=>{
 },{passive:true});
 stage.addEventListener('touchcancel',()=>{touchStart=null;});
 document.querySelector('.close').addEventListener('click',()=>dialog.close());
-dialog.addEventListener('close',()=>{document.body.classList.remove('modal-open');trigger?.focus();});
+dialog.addEventListener('close',()=>{video.pause();document.body.classList.remove('modal-open');trigger?.focus();});
 dialog.addEventListener('click',event=>{const r=dialog.getBoundingClientRect();if(event.target===dialog&&(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom))dialog.close();});
 
 // Animate only on entry; content remains visible without JavaScript or motion.
@@ -407,7 +452,7 @@ function gentleEntrance(element,delay=0){
  if(element.matches('.personal-monogram')){element.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{...timing,delay:delay+250,duration:1800,easing:'cubic-bezier(.65,0,.35,1)'});return;}
  element.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'translateY(0)'}],timing);
  // Photos settle a little slower than the text around them; the portrait rises into its arch.
- element.querySelectorAll('.project-image img').forEach(image=>image.animate([{transform:'scale(1.06)'},{transform:'none'}],{...timing,duration:1200}));
+ element.querySelectorAll('.project-image img,.project-image video').forEach(image=>image.animate([{transform:'scale(1.06)'},{transform:'none'}],{...timing,duration:1200}));
  element.querySelectorAll('.portrait img').forEach(image=>image.animate([{clipPath:'inset(100% 0 0 0)',transform:'scale(1.1)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{...timing,duration:1300}));
 }
 const entranceTargets=document.querySelectorAll('.hero h1,.hero .eyebrow,.hero .intro,.hero .button,.portrait,.section-heading,.featured,.project-grid article,.about-grid>div,.personal-monogram,.education,.tool-list li,.service,.contact h2,.contact .email');
@@ -418,8 +463,17 @@ if('IntersectionObserver' in window){
  },{threshold:.08});
  entranceTargets.forEach(element=>entrances.observe(element));
 }
-photo.addEventListener('load',()=>{
- // The new photo slides in from the side the visitor is moving towards.
- if(!motionPreference.matches&&photo.animate){photo.getAnimations().forEach(animation=>animation.cancel());photo.animate([{opacity:0,transform:`translateX(${slideDirection*32}px)`},{opacity:1,transform:'none'}],{duration:420,easing:'cubic-bezier(.22,1,.36,1)'});}
-});
+// The new photo or animation slides in from the side the visitor is moving towards.
+function slideIn(media){
+ if(motionPreference.matches||!media.animate)return;
+ media.getAnimations().forEach(animation=>animation.cancel());
+ media.animate([{opacity:0,transform:`translateX(${slideDirection*32}px)`},{opacity:1,transform:'none'}],{duration:420,easing:'cubic-bezier(.22,1,.36,1)'});
+}
+photo.addEventListener('load',()=>slideIn(photo));
+video.addEventListener('loadeddata',()=>slideIn(video));
+// Animated covers play only while on screen, and stay on their first frame for visitors who prefer less motion.
+if('IntersectionObserver' in window){
+ const covers=new IntersectionObserver(entries=>entries.forEach(({target,isIntersecting})=>{if(isIntersecting&&!motionPreference.matches)target.play().catch(()=>{});else target.pause();}),{threshold:.25});
+ document.querySelectorAll('.project-image video').forEach(cover=>covers.observe(cover));
+}
 motionPreference.addEventListener('change',()=>{if(motionPreference.matches)document.getAnimations().forEach(animation=>animation.cancel());});

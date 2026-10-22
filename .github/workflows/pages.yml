@@ -25,6 +25,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+      # Browsers keep styles.css and script.js for 10 minutes; a version per commit makes them load the new files with the new page.
+      - run: sed -i "s/\(styles\.css\|script\.js\)\"/\1?v=${GITHUB_SHA::7}\"/g" index.html
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

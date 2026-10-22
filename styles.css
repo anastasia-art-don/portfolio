@@ -82,6 +82,9 @@ h3 { font-size: 25px; letter-spacing: -.6px; line-height: 1.2; font-weight: 400;
 
 .modal-open { overflow: hidden; }
 
+/* A <picture> only chooses the file; the <img> inside it is laid out as if the <picture> were not there. */
+picture { display: contents; }
+
 /* Arrows and the cross are SVG icons: as text, iPhones draw them as emoji. One arrow of each kind is turned to point elsewhere. */
 .icon { display: inline-block; width: 1em; height: 1em; vertical-align: -.14em; flex: none; }
 .icon-down-right, .icon-down { rotate: 90deg; }
@@ -279,6 +282,7 @@ nav { display: flex; gap: 36px; font-size: 13px; }
 .education { border-top: 1px solid var(--line-on-surface); margin-top: 30px; padding-top: 22px; }
 .education .eyebrow { margin-bottom: 8px; }
 .education p { margin: 0; }
+.education p + p { margin-top: 16px; }
 
 .toolkit { border-top: 1px solid var(--line-on-surface); margin-top: 30px; padding-top: 22px; }
 .toolkit h3 { font-size: 17px; letter-spacing: 0; margin: 0 0 16px; }
@@ -295,7 +299,8 @@ nav { display: flex; gap: 36px; font-size: 13px; }
   .about-grid { grid-template-columns: 1fr; gap: 30px; }
   .about p.lead { font-size: 18px; }
   .about p:not(.eyebrow) { font-size: 15px; }
-  .personal-monogram { width: 110px; height: 60px; margin-top: 24px; }
+  /* On phones the monogram spans the screen as the visual of the section. */
+  .personal-monogram { width: 100%; height: auto; margin-top: 32px; }
 }
 
 

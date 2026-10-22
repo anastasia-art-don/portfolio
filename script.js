@@ -325,6 +325,11 @@ const projects={
   }
 };
 document.querySelectorAll('.project-image[data-case]').forEach(button=>{const count=document.createElement('span');count.className='photo-count';count.textContent=projects[button.dataset.case].images.length+' фото';button.append(count);});
+// A cover whose phone copy is missing falls back to the full-size photo.
+document.querySelectorAll('picture img').forEach(image=>{
+ const fallBack=()=>image.parentElement.querySelectorAll('source').forEach(source=>source.remove());
+ if(image.complete&&!image.naturalWidth)fallBack();else image.addEventListener('error',fallBack,{once:true});
+});
 const dialog=document.querySelector('dialog');
 const gallery=document.querySelector('#case-gallery');
 let trigger,activeProject,activeSlide=0,slideDirection=0;
@@ -335,14 +340,17 @@ const next=gallery.querySelector('.gallery-next');
 const caption=gallery.querySelector('.gallery-caption');
 const thumbs=gallery.querySelector('.gallery-thumbs');
 const error=gallery.querySelector('.gallery-error');
+// Phones load the lighter copy of each photo from assets/m/; the full-size file is the fallback.
+const phone=window.matchMedia('(max-width: 600px)');
+const photoUrl=name=>phone.matches?`assets/m/${name}.webp`:`assets/${name}.webp`;
 function showSlide(index){
  if(!activeProject)return;
  const target=Math.max(0,Math.min(index,activeProject.images.length-1));
  slideDirection=Math.sign(target-activeSlide);activeSlide=target;
  const [name,alt]=activeProject.images[activeSlide];
  // Load the next photo in advance, so swiping through a project does not wait for the network.
- const following=activeProject.images[activeSlide+1];if(following)new Image().src=`assets/${following[0]}.webp`;
- error.hidden=true;photo.hidden=false;photo.alt=alt;photo.src=`assets/${name}.webp`;
+ const following=activeProject.images[activeSlide+1];if(following)new Image().src=photoUrl(following[0]);
+ error.hidden=true;photo.hidden=false;photo.alt=alt;photo.src=photoUrl(name);
  caption.textContent=`${activeSlide+1} / ${activeProject.images.length} — ${alt}`;
  previous.disabled=activeSlide===0;next.disabled=activeSlide===activeProject.images.length-1;
  [...thumbs.children].forEach((button,i)=>button.setAttribute('aria-pressed',String(i===activeSlide)));
@@ -352,7 +360,11 @@ function showSlide(index){
  if(left<thumbs.scrollLeft)thumbs.scrollLeft=left;
  else if(left+selected.offsetWidth>thumbs.scrollLeft+thumbs.clientWidth)thumbs.scrollLeft=left+selected.offsetWidth-thumbs.clientWidth;
 }
-photo.addEventListener('error',()=>{error.hidden=false;photo.hidden=true;});
+photo.addEventListener('error',()=>{
+ const full=new URL(`assets/${activeProject.images[activeSlide][0]}.webp`,document.baseURI).href;
+ if(photo.src!==full){photo.src=full;return;}
+ error.hidden=false;photo.hidden=true;
+});
 previous.addEventListener('click',()=>showSlide(activeSlide-1));
 next.addEventListener('click',()=>showSlide(activeSlide+1));
 document.querySelectorAll('[data-case]').forEach(button=>button.addEventListener('click',()=>{
@@ -363,6 +375,7 @@ document.querySelectorAll('[data-case]').forEach(button=>button.addEventListener
  thumbs.replaceChildren(...activeProject.images.map(([name,alt],i)=>{
   const thumb=document.createElement('button');thumb.type='button';thumb.setAttribute('aria-label',`Фото ${i+1}: ${alt}`);
   const image=document.createElement('img');image.src=`assets/thumbs/${name}.webp`;image.alt='';image.loading='lazy';thumb.append(image);
+  image.addEventListener('error',()=>{image.src=`assets/${name}.webp`;},{once:true});
   thumb.addEventListener('click',()=>showSlide(i));return thumb;
  }));
  dialog.showModal();dialog.scrollTop=0;thumbs.scrollLeft=0;document.body.classList.add('modal-open');activeSlide=0;showSlide(0);
@@ -390,12 +403,14 @@ const motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
 function gentleEntrance(element,delay=0){
  if(motionPreference.matches||!element.animate)return;
  const timing={duration:650,delay,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'};
+ // The monogram draws itself from left to right instead of rising.
+ if(element.matches('.personal-monogram')){element.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{...timing,delay:delay+250,duration:1800,easing:'cubic-bezier(.65,0,.35,1)'});return;}
  element.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'translateY(0)'}],timing);
  // Photos settle a little slower than the text around them; the portrait rises into its arch.
  element.querySelectorAll('.project-image img').forEach(image=>image.animate([{transform:'scale(1.06)'},{transform:'none'}],{...timing,duration:1200}));
  element.querySelectorAll('.portrait img').forEach(image=>image.animate([{clipPath:'inset(100% 0 0 0)',transform:'scale(1.1)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{...timing,duration:1300}));
 }
-const entranceTargets=document.querySelectorAll('.hero h1,.hero .eyebrow,.hero .intro,.hero .button,.portrait,.section-heading,.featured,.project-grid article,.about-grid>div,.education,.tool-list li,.service,.contact h2,.contact .email');
+const entranceTargets=document.querySelectorAll('.hero h1,.hero .eyebrow,.hero .intro,.hero .button,.portrait,.section-heading,.featured,.project-grid article,.about-grid>div,.personal-monogram,.education,.tool-list li,.service,.contact h2,.contact .email');
 if('IntersectionObserver' in window){
  const entrances=new IntersectionObserver(entries=>{
   // Elements that come into view together appear one after another.

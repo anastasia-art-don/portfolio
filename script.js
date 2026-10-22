@@ -327,7 +327,7 @@ const projects={
 document.querySelectorAll('.project-image[data-case]').forEach(button=>{const count=document.createElement('span');count.className='photo-count';count.textContent=projects[button.dataset.case].images.length+' фото';button.append(count);});
 const dialog=document.querySelector('dialog');
 const gallery=document.querySelector('#case-gallery');
-let trigger,activeProject,activeSlide=0;
+let trigger,activeProject,activeSlide=0,slideDirection=0;
 gallery.innerHTML=`<div class="gallery-stage" role="group" aria-label="Зображення проєкту"><img class="gallery-photo" alt="" draggable="false"><p class="gallery-error" hidden>Не вдалося завантажити зображення. Спробуй інший кадр.</p></div><div class="gallery-toolbar"><button type="button" class="gallery-prev" aria-label="Попереднє фото">←</button><p class="gallery-caption" role="status" aria-live="polite" aria-atomic="true"></p><button type="button" class="gallery-next" aria-label="Наступне фото">→</button></div><div class="gallery-thumbs" role="group" aria-label="Вибрати фото"></div>`;
 const photo=gallery.querySelector('.gallery-photo');
 const previous=gallery.querySelector('.gallery-prev');
@@ -337,8 +337,11 @@ const thumbs=gallery.querySelector('.gallery-thumbs');
 const error=gallery.querySelector('.gallery-error');
 function showSlide(index){
  if(!activeProject)return;
- activeSlide=Math.max(0,Math.min(index,activeProject.images.length-1));
+ const target=Math.max(0,Math.min(index,activeProject.images.length-1));
+ slideDirection=Math.sign(target-activeSlide);activeSlide=target;
  const [name,alt]=activeProject.images[activeSlide];
+ // Load the next photo in advance, so swiping through a project does not wait for the network.
+ const following=activeProject.images[activeSlide+1];if(following)new Image().src=`assets/${following[0]}.webp`;
  error.hidden=true;photo.hidden=false;photo.alt=alt;photo.src=`assets/${name}.webp`;
  caption.textContent=`${activeSlide+1} / ${activeProject.images.length} — ${alt}`;
  previous.disabled=activeSlide===0;next.disabled=activeSlide===activeProject.images.length-1;
@@ -362,7 +365,7 @@ document.querySelectorAll('[data-case]').forEach(button=>button.addEventListener
   const image=document.createElement('img');image.src=`assets/thumbs/${name}.webp`;image.alt='';image.loading='lazy';thumb.append(image);
   thumb.addEventListener('click',()=>showSlide(i));return thumb;
  }));
- dialog.showModal();dialog.scrollTop=0;thumbs.scrollLeft=0;document.body.classList.add('modal-open');showSlide(0);
+ dialog.showModal();dialog.scrollTop=0;thumbs.scrollLeft=0;document.body.classList.add('modal-open');activeSlide=0;showSlide(0);
 }));
 dialog.addEventListener('keydown',event=>{
  if(event.altKey||event.ctrlKey||event.metaKey)return;
@@ -386,16 +389,22 @@ dialog.addEventListener('click',event=>{const r=dialog.getBoundingClientRect();i
 const motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
 function gentleEntrance(element,delay=0){
  if(motionPreference.matches||!element.animate)return;
- element.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'translateY(0)'}],{duration:650,delay,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'});
+ const timing={duration:650,delay,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'};
+ element.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'translateY(0)'}],timing);
+ // Photos settle a little slower than the text around them; the portrait rises into its arch.
+ element.querySelectorAll('.project-image img').forEach(image=>image.animate([{transform:'scale(1.06)'},{transform:'none'}],{...timing,duration:1200}));
+ element.querySelectorAll('.portrait img').forEach(image=>image.animate([{clipPath:'inset(100% 0 0 0)',transform:'scale(1.1)'},{clipPath:'inset(0 0 0 0)',transform:'none'}],{...timing,duration:1300}));
 }
-const entranceTargets=document.querySelectorAll('.hero h1,.hero .eyebrow,.hero .intro,.hero .button,.portrait,.section-heading,.featured,.project-grid article,.about-grid>div,.service,.contact h2,.contact .email');
+const entranceTargets=document.querySelectorAll('.hero h1,.hero .eyebrow,.hero .intro,.hero .button,.portrait,.section-heading,.featured,.project-grid article,.about-grid>div,.education,.tool-list li,.service,.contact h2,.contact .email');
 if('IntersectionObserver' in window){
  const entrances=new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{if(entry.isIntersecting){gentleEntrance(entry.target);entrances.unobserve(entry.target);}});
+  // Elements that come into view together appear one after another.
+  entries.filter(entry=>entry.isIntersecting).forEach((entry,i)=>{gentleEntrance(entry.target,Math.min(i,6)*90);entrances.unobserve(entry.target);});
  },{threshold:.08});
  entranceTargets.forEach(element=>entrances.observe(element));
 }
 photo.addEventListener('load',()=>{
- if(!motionPreference.matches&&photo.animate){photo.getAnimations().forEach(animation=>animation.cancel());photo.animate([{opacity:.35},{opacity:1}],{duration:280,easing:'ease-out'});}
+ // The new photo slides in from the side the visitor is moving towards.
+ if(!motionPreference.matches&&photo.animate){photo.getAnimations().forEach(animation=>animation.cancel());photo.animate([{opacity:0,transform:`translateX(${slideDirection*32}px)`},{opacity:1,transform:'none'}],{duration:420,easing:'cubic-bezier(.22,1,.36,1)'});}
 });
 motionPreference.addEventListener('change',()=>{if(motionPreference.matches)document.getAnimations().forEach(animation=>animation.cancel());});
